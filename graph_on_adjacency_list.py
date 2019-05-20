@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 import numpy as np
 from graphviz import Graph
 import string
 
-
 class AdjListGraph:
     def __init__(self):
-        self.adj = list()  # Список смежности
-        self.attributes = list()  # Список атрибутов вершин, list of dict
+        self.adj = dict()  # Список смежности
+        self.attributes = dict()  # Список атрибутов вершин
 
     def add_vertices(self, n):
         """ Добавить n вершн в граф.
-
         :param int n: колиичество вершин для добавления
         """
         for i in range(n):
             self.adj.append(list())
-            self.attributes.append(dict())
+            self.attributes.append({})
 
     def remove_vertex(self, v):
         """ Удалить вершину из графа
-
         :param int v: индекс вершинаы графа
         """
         self.adj.pop(v)
@@ -30,66 +26,77 @@ class AdjListGraph:
 
     def number_of_vertices(self):
         """ Возвращает количество вершин графа
-
         :rtype: int
         """
         return len(self.adj)
 
     def add_edge(self, u, v):
         """ Добавить ребро, соединяющее вершины с индексами u и v
-
         :param int u: индекс вершины графа
         :param int v: индекс вершины графа
         """
-        raise NotImplemented("Реализуйте этот метод")
+        self.adj[u].add(v)
+        self.adj[v].add(u)
 
     def remove_edge(self, u, v):
         """ Удалить ребро, соединяющее вершины с индексами u и v
-
         :param int u: индекс вершины графа
         :param int v: индекс вершины графа
         """
-        raise NotImplemented("Реализуйте этот метод")
+        self.adj[u].remove(v)
+        self.adj[v].remove(u)
 
     def number_of_edges(self):
         """ Возвращает количество ребер в графе
-
         :rtype: int
         """
-        raise NotImplemented("Реализуйте этот метод")
+        count = 0
+        for i in self.adj:
+            for j in i:
+                count += 1
+        return count // 2
 
     def neighbors(self, v):
         """ Возвращает список индексов вершин, соседних с данной
-
         :param int v: индекс вершины графа
         :rtype: list of int
         """
-        raise NotImplemented("Реализуйте этот метод")
+        return list(self.adj[v])
 
     def draw(self, filename='test.gv'):
         """
         Отрисовывает граф используя библиотеку Graphviz. Больше примеров:
         https://graphviz.readthedocs.io/en/stable/examples.html
         """
-        g = Graph('G', filename=filename, engine='sfdp')
+        g = Graph('G', filename=filename, format='png')
 
-        for v, attr in enumerate(self.attributes):
+        for v, attr in self.attributes.items():
             if 'color' in attr:
                 g.attr('node', style='filled', fillcolor=attr['color'])
                 if attr['color'] == 'black':
                     g.attr('node', fontcolor='white')
+                else:
+                    g.attr('node', fontcolor='black')
             else:
                 g.attr('node', style='', color='', fontcolor='', fillcolor='')
 
+            text = ''
             if 'name' in attr:
-                g.node(str(v), label='{} ({})'.format(attr['name'], v))
-            else:
-                g.node(str(v))
+                text += '{} '.format(attr['name'])
+            text += '({})'.format(v)
+            for k, a in attr.items():
+                if k == 'name':
+                    continue
+                if k == 'color':
+                    continue
+                text += '\n{}: {}'.format(k, a)
 
-        for i in range(self.number_of_vertices()):
-            for j in self.adj[i]:
-                if i < j:
-                    g.edge(str(i), str(j))
+            g.node(str(v), text)
+
+        for u in self.adj.keys():
+            for v in self.adj[u]:
+                if u <= v:
+                    g.edge(str(u), str(v))
 
         g.view()
 
@@ -110,7 +117,11 @@ def main():
     print(g.number_of_edges())
     print(g.number_of_vertices())
     print(g.neighbors(1))
-    g.draw()
+    print(g.adj)
+    print(g.attributes)
+
+
+g.draw()
 
 
 if __name__ == "__main__":
